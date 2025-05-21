@@ -29,7 +29,7 @@ public class LoginController : ControllerBase
         var user = await _authService.AuthenticateUser(model.Username, model.Password);
         
         if (user == null) return Unauthorized();
-        var token = _tokenService.GenerateToken(model.Username, model.Roles.Select(r => r.Name).ToList());
+        var token = _tokenService.GenerateToken(user);
         return Ok(new { Token = token });
     }
     

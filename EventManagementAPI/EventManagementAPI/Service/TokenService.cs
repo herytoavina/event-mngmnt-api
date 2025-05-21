@@ -1,13 +1,14 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using EventManagementAPI.Model;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EventManagementAPI.Service;
 
 public class TokenService(IConfiguration _configuration) : ITokenService
 {
-    public string GenerateToken(string username, List<string> roles)
+    public string GenerateToken(User user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"];
@@ -20,14 +21,15 @@ public class TokenService(IConfiguration _configuration) : ITokenService
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, username),
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
         // Add all roles to the token
-        foreach (var role in roles)
+        foreach (var role in user.Roles)
         {
-            claims.Add(new Claim(ClaimTypes.Role, role));
+            claims.Add(new Claim(ClaimTypes.Role, role.Name));
         }
 
         var token = new JwtSecurityToken(

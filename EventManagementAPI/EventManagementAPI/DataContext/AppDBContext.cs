@@ -11,6 +11,8 @@ public class AppDBContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
+    public DbSet<Event> Events { get; set; }
+    public DbSet<Registration> Registrations { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -20,7 +22,28 @@ public class AppDBContext : DbContext
             .WithMany(r => r.Users)
             .UsingEntity<UserRole>();
 
-        // Seed initial data
+        modelBuilder.Entity<Event>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasConversion<string>()
+                .HasDefaultValue(EventStatus.Draft);
+        });
+        
+        modelBuilder.Entity<Registration>(entity =>
+        {
+            entity.HasKey(r => new { r.UserId, r.EventId });
+            
+            entity.HasOne(r => r.User)
+                .WithMany(u => u.Registrations)
+                .HasForeignKey(r => r.UserId);
+            
+            entity.HasOne(r => r.Event)
+                .WithMany(e => e.Registrations)
+                .HasForeignKey(r => r.EventId);
+        });
+        
         modelBuilder.Entity<Role>().HasData(
             new Role { Id = 1, Name = "User" },
             new Role { Id = 2, Name = "Admin" }

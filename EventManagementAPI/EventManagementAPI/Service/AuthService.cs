@@ -19,14 +19,20 @@ public class AuthService : IAuthService
     public async Task<User> AuthenticateUser(string username, string password)
     {
         var user = await _context.Users
+            .AsNoTracking()
             .Include(u => u.Roles)
             .FirstOrDefaultAsync(u => u.Username == username);
 
+
         if (user == null)
+        {
+            _passwordHasher.HashPassword(new User(), "dummy-password");
             return null;
+        }
 
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
-        return result == PasswordVerificationResult.Success ? user : null;
+    
+        return result != PasswordVerificationResult.Success ? null : user;
     }
     
    /* public async Task<List<string>> GetUserRoles(int userId)
